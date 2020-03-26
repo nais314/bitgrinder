@@ -1,0 +1,5 @@
+#key = "copy HERE the result of: openssl rand -base64 256"
+#password = "type your password HERE"
+#preburn = 42 # integer 0 - 255: expand the key N times before start
+#expproc = 0 # integer 0 - 4 : currently 5 different modes supported
+#expmode = "repeat/block/continous or r/b/c" 

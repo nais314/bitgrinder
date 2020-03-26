@@ -1,0 +1,5 @@
+password = "passw0rd"
+preburn = 128
+expproc = 0
+expmode = "b"
+keytablerows = 128
