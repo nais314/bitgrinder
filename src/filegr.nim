@@ -6,14 +6,14 @@
 #[
     used Key values:
       salt_rand = getRand(theKey[8])
-      (theKey[theKey.high] and extraCountMask):
-      (theKey[theKey.high - 1] and extraCountMask):
-      (theKey[theKey.high - 2] and extraCountMask):
-      (theKey[theKey.high - 3] and extraCountMask):
+      (theKey[theKey.high]):
+      (theKey[theKey.high - 1]):
+      (theKey[theKey.high - 2]):
+      (theKey[theKey.high - 3]):
 
     used extraTable values:
       outFile.write((salt_rand  xor extraTable[extraTable.high][0]).char)
-      for iswap in 0..(extraTable[0][0] and extraCountMask).int:
+      for iswap in 0..(extraTable[0][0]).int:
       extraTable[iswap mod KeyTableRows]
 
     Key and keyTable (word) usage is ambigous.
@@ -661,24 +661,13 @@ proc encodeFile(inFileName,
 
       var extraPositions:seq[int]
 
-      # num of extra bytes depends on filesize
-      var extraCountMask:uint8=0b00001111
-      #[ if inFileSize < 10:
-        extraCountMask = 0b00000011 ]#
-      if inFileSize < 1000:
-        extraCountMask = 0b00001111
-      elif inFileSize < 100_000:
-        extraCountMask = 0b00111111
-      elif inFileSize < 10_000_000:
-        extraCountMask = 0b01111111
-      else:
-        extraCountMask = 0b11111111
+
 
       #!SWAP.........................
 
-      if verbosity > 1 or debug >= 0b1: echo "- swapping ",(extraTable[0][0] and extraCountMask)," times"
+      if verbosity > 1 or debug >= 0b1: echo "- swapping ",(extraTable[0][0])," times"
 
-      for iswap in 0..(extraTable[0][0] and extraCountMask).int:
+      for iswap in 0..(extraTable[0][0]).int:
         var newExtraKey = extraTable[iswap mod KeyTableRows]
         for ni in 0..iswap:
           newExtraKey = mxKeyAlg1(newExtraKey)
@@ -697,20 +686,20 @@ proc encodeFile(inFileName,
 
       extraPositions = getExtraPositions(numRead - 1,extraTable[0])
 
-      for ik in 0.uint8 .. (theKey[theKey.high] and extraCountMask):
+      for ik in 0.uint8 .. (theKey[theKey.high]):
         theBuffer.add(rand(255).uint8)
-      for ik in 0.uint8 .. (theKey[theKey.high - 1] and extraCountMask):
+      for ik in 0.uint8 .. (theKey[theKey.high - 1]):
         theBuffer.insert(rand(255).uint8,extraPositions[0])
-      for ik in 0.uint8 .. (theKey[theKey.high - 2] and extraCountMask):
+      for ik in 0.uint8 .. (theKey[theKey.high - 2]):
         theBuffer.insert(rand(255).uint8,extraPositions[3])
-      for ik in 0.uint8 .. (theKey[theKey.high - 3] and extraCountMask):
+      for ik in 0.uint8 .. (theKey[theKey.high - 3]):
         theBuffer.insert(rand(255).uint8,0)
 
       when debug >= 0b11:
-        stdout.write (theKey[theKey.high] and extraCountMask), ", "
-        stdout.write (theKey[theKey.high - 1] and extraCountMask), ", "
-        stdout.write (theKey[theKey.high - 2] and extraCountMask), ", "
-        echo (theKey[theKey.high - 3] and extraCountMask)
+        stdout.write (theKey[theKey.high]), ", "
+        stdout.write (theKey[theKey.high - 1]), ", "
+        stdout.write (theKey[theKey.high - 2]), ", "
+        echo (theKey[theKey.high - 3])
 
 
       #*...............................................
@@ -859,25 +848,14 @@ proc decodeFile(inFileName: string,
 
     var extraPositions:seq[int]
 
-    var extraCountMask:uint8=0b00001111
-    #[ if inFileSize < 10:
-      extraCountMask = 0b00000011 ]#
-    if inFileSize < 1000:
-      extraCountMask = 0b00001111
-    elif inFileSize < 100_000:
-      extraCountMask = 0b00111111
-    elif inFileSize < 10_000_000:
-      extraCountMask = 0b01111111
-    else:
-      extraCountMask = 0b11111111
 
     #!EXTRABYTES...................
     # numRead is used to get THE ORIGINAL file size
     when debug >= 0b1: echo "DEC extrabytes"
-    numRead -= (theKey[theKey.high - 3] and extraCountMask)
-    numRead -= (theKey[theKey.high - 2] and extraCountMask)
-    numRead -= (theKey[theKey.high - 1] and extraCountMask)
-    numRead -= (theKey[theKey.high] and extraCountMask)
+    numRead -= (theKey[theKey.high - 3])
+    numRead -= (theKey[theKey.high - 2])
+    numRead -= (theKey[theKey.high - 1])
+    numRead -= (theKey[theKey.high])
     numRead -= 4
     when debug >= 0b1: echo "DEC numRead #2 = ", numRead
 
@@ -891,25 +869,25 @@ proc decodeFile(inFileName: string,
 
 
     when debug >= 0b1: echo "1/5"
-    for ik in 0.uint8 .. (theKey[theKey.high - 3] and extraCountMask):
+    for ik in 0.uint8 .. (theKey[theKey.high - 3]):
       theBuffer.delete(0)
     when debug >= 0b1: echo "2/5"
-    for ik in 0.uint8 .. (theKey[theKey.high - 2] and extraCountMask):
+    for ik in 0.uint8 .. (theKey[theKey.high - 2]):
       theBuffer.delete(extraPositions[3])
     when debug >= 0b1: echo "3/5"
-    for ik in 0.uint8 .. (theKey[theKey.high - 1] and extraCountMask):
+    for ik in 0.uint8 .. (theKey[theKey.high - 1]):
       theBuffer.delete(extraPositions[0])
     when debug >= 0b1: echo "4/5"
-    for ik in 0.uint8 .. (theKey[theKey.high] and extraCountMask):
+    for ik in 0.uint8 .. (theKey[theKey.high]):
       theBuffer.delete(theBuffer.high)
 
     # at this point assert: numRead == theBuffer.len
 
     when debug >= 0b1:
-      stdout.write (theKey[theKey.high] and extraCountMask), ", "
-      stdout.write (theKey[theKey.high - 1] and extraCountMask), ", "
-      stdout.write (theKey[theKey.high - 2] and extraCountMask), ", "
-      echo (theKey[theKey.high - 3] and extraCountMask)
+      stdout.write (theKey[theKey.high]), ", "
+      stdout.write (theKey[theKey.high - 1]), ", "
+      stdout.write (theKey[theKey.high - 2]), ", "
+      echo (theKey[theKey.high - 3])
 
 
 
@@ -921,8 +899,8 @@ proc decodeFile(inFileName: string,
 
 
     #!SWAP.........................
-    when debug >= 0b1: echo "- swapping ",(extraTable[0][0] and extraCountMask)," times"
-    for iswap in countdown((extraTable[0][0] and extraCountMask).int,0):
+    when debug >= 0b1: echo "- swapping ",(extraTable[0][0])," times"
+    for iswap in countdown((extraTable[0][0]).int,0):
       var newExtraKey = extraTable[iswap mod KeyTableRows]
       for ni in 0..iswap:
         newExtraKey = mxKeyAlg1(newExtraKey)
@@ -1125,23 +1103,11 @@ proc encodeByteSeq(inP: var ByteSeq,
 
       var extraPositions:seq[int]
 
-      # num of extra bytes depends on filesize
-      var extraCountMask:uint8=0b00001111
-      #[ if inFileSize < 10:
-        extraCountMask = 0b00000011 ]#
-      if inFileSize < 1000:
-        extraCountMask = 0b00001111
-      elif inFileSize < 100_000:
-        extraCountMask = 0b00111111
-      elif inFileSize < 10_000_000:
-        extraCountMask = 0b01111111
-      else:
-        extraCountMask = 0b11111111
 
       #!SWAP.........................
-      when debug >= 0b1: echo "- swapping ",(extraTable[0][0] and extraCountMask)," times"
+      when debug >= 0b1: echo "- swapping ",(extraTable[0][0])," times"
 
-      for iswap in 0..(extraTable[0][0] and extraCountMask).int:
+      for iswap in 0..(extraTable[0][0]).int:
         var newExtraKey = extraTable[iswap mod KeyTableRows]
         for ni in 0..iswap:
           newExtraKey = mxKeyAlg1(newExtraKey)
@@ -1160,20 +1126,20 @@ proc encodeByteSeq(inP: var ByteSeq,
 
       extraPositions = getExtraPositions(numRead - 1,extraTable[0])
 
-      for ik in 0.uint8 .. (theKey[theKey.high] and extraCountMask):
+      for ik in 0.uint8 .. (theKey[theKey.high]):
         theBuffer.add(rand(255).uint8)
-      for ik in 0.uint8 .. (theKey[theKey.high - 1] and extraCountMask):
+      for ik in 0.uint8 .. (theKey[theKey.high - 1]):
         theBuffer.insert(rand(255).uint8,extraPositions[0])
-      for ik in 0.uint8 .. (theKey[theKey.high - 2] and extraCountMask):
+      for ik in 0.uint8 .. (theKey[theKey.high - 2]):
         theBuffer.insert(rand(255).uint8,extraPositions[3])
-      for ik in 0.uint8 .. (theKey[theKey.high - 3] and extraCountMask):
+      for ik in 0.uint8 .. (theKey[theKey.high - 3]):
         theBuffer.insert(rand(255).uint8,0)
 
       when debug >= 0b11:
-        stdout.write (theKey[theKey.high] and extraCountMask), ", "
-        stdout.write (theKey[theKey.high - 1] and extraCountMask), ", "
-        stdout.write (theKey[theKey.high - 2] and extraCountMask), ", "
-        echo (theKey[theKey.high - 3] and extraCountMask)
+        stdout.write (theKey[theKey.high]), ", "
+        stdout.write (theKey[theKey.high - 1]), ", "
+        stdout.write (theKey[theKey.high - 2]), ", "
+        echo (theKey[theKey.high - 3])
 
       when debug >= 0b1:
         echo "extrabytes elapsed: ", epochTime() - t0
@@ -1336,26 +1302,13 @@ proc decodeByteSeq*(inP: var ByteSeq,
     var extraPositions:seq[int]
     when debug >= 0b1: echo "inFileSize ", inFileSize
 
-    var extraCountMask:uint8=0b00001111
-    #[ if inFileSize < 10:
-      extraCountMask = 0b00000011 ]#
-    if inFileSize < 1000:
-      extraCountMask = 0b00001111
-    elif inFileSize < 100_000:
-      extraCountMask = 0b00111111
-    elif inFileSize < 10_000_000:
-      extraCountMask = 0b01111111
-    else:
-      extraCountMask = 0b11111111
-
-    when debug >= 0b1: echo "extraCountMask ", extraCountMask.int.toBin(8)
 
     #!EXTRABYTES...................
     when debug >= 0b1: echo "DEC extrabytes"
-    numRead -= (theKey[theKey.high - 3] and extraCountMask)
-    numRead -= (theKey[theKey.high - 2] and extraCountMask)
-    numRead -= (theKey[theKey.high - 1] and extraCountMask)
-    numRead -= (theKey[theKey.high] and extraCountMask)
+    numRead -= (theKey[theKey.high - 3])
+    numRead -= (theKey[theKey.high - 2])
+    numRead -= (theKey[theKey.high - 1])
+    numRead -= (theKey[theKey.high])
     numRead -= 4
     when debug >= 0b1: echo "DEC numRead #2 = ", numRead
 
@@ -1369,23 +1322,23 @@ proc decodeByteSeq*(inP: var ByteSeq,
 
 
     when debug >= 0b1: echo "1/5"
-    for ik in 0.uint8 .. (theKey[theKey.high - 3] and extraCountMask):
+    for ik in 0.uint8 .. (theKey[theKey.high - 3]):
       theBuffer.delete(0)
     when debug >= 0b1: echo "2/5"
-    for ik in 0.uint8 .. (theKey[theKey.high - 2] and extraCountMask):
+    for ik in 0.uint8 .. (theKey[theKey.high - 2]):
       theBuffer.delete(extraPositions[3])
     when debug >= 0b1: echo "3/5"
-    for ik in 0.uint8 .. (theKey[theKey.high - 1] and extraCountMask):
+    for ik in 0.uint8 .. (theKey[theKey.high - 1]):
       theBuffer.delete(extraPositions[0])
     when debug >= 0b1: echo "4/5"
-    for ik in 0.uint8 .. (theKey[theKey.high] and extraCountMask):
+    for ik in 0.uint8 .. (theKey[theKey.high]):
       theBuffer.delete(theBuffer.high)
 
     when debug >= 0b1:
-      stdout.write (theKey[theKey.high] and extraCountMask), ", "
-      stdout.write (theKey[theKey.high - 1] and extraCountMask), ", "
-      stdout.write (theKey[theKey.high - 2] and extraCountMask), ", "
-      echo (theKey[theKey.high - 3] and extraCountMask)
+      stdout.write (theKey[theKey.high]), ", "
+      stdout.write (theKey[theKey.high - 1]), ", "
+      stdout.write (theKey[theKey.high - 2]), ", "
+      echo (theKey[theKey.high - 3])
 
     when debug >= 0b1:
      echo "5/5 DEC extrabytes ", epochTime() - t0
@@ -1399,8 +1352,8 @@ proc decodeByteSeq*(inP: var ByteSeq,
 
 
     #!SWAP.........................
-    when debug >= 0b1: echo "- swapping ",(extraTable[0][0] and extraCountMask)," times"
-    for iswap in countdown((extraTable[0][0] and extraCountMask).int,0):
+    when debug >= 0b1: echo "- swapping ",(extraTable[0][0])," times"
+    for iswap in countdown((extraTable[0][0]).int,0):
       var newExtraKey = extraTable[iswap mod KeyTableRows]
       for ni in 0..iswap:
         newExtraKey = mxKeyAlg1(newExtraKey)
@@ -2329,7 +2282,7 @@ Notes:
                 testFileB.close()
                 echo("!!! Testing decoding failed !!!")
                 break
-          if verbosity >= 1: echo "- Decode test succesfull :)"
+            if verbosity >= 1: echo "- Decode test succesfull :)"
 
           #.....................................
           if verbosity >= 1: echo "- Cleanup..."
