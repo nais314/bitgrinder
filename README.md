@@ -26,8 +26,10 @@ it uses a minimum 256 bytes long key - derived from password, or supplied in a k
 because xor and addition functions may be accidentali decoded via brute force, the encoder swaps some bytes,
 depending on the key.  
 so bitgrinder contains a pass-to-key generator, an encoder, and a lot of mixing functions.  
-the word **key** can be ambigous, because it can store a full keytable too, in a keyfile  
+the word **key** can be ambigous, because it can store a full keytable too - in a keyfile.  
   
+ . 
+# filegrinder
 **filegr** is a **multi-threaded** file encrypton _tool_, built with bitgrinder.  
 it adds extra layers of security:  
 - chunk up larger byte-sequences like files - depending on the key
@@ -42,16 +44,16 @@ setting keytablerows to 64, preburn to 256 - and the encoding time rises 10X :)
 except afterburners, all options will be auto choosed, based on the password, if not explicitly given.  
 the options are multiplying the work needed for succesfull crack.  
   
-**you may write your own afterburners, to make the tool unique!**
+**you may write your own afterburner procs, to make the tool unique!**
 
 the source is full of commented-out sections, and testresults can be find in /tests:  
 the original version was hand-crafted, later, after many boring tests, i wrote automated test, and the current key-expansion procs are selected from millions of rounds, statistically.  
 at the end of bitgrinder.nim, test functions can be enabled - they are moved to ismain.nim.  
 it was fun to write bg, and i hope, others will also find it intresting, to hack around - that is why the source is not bleached-out ;) it is a living code.  
   
-  .  
 
-## FILEGR
+
+### FILEGR options
 
 - **fg** can use arguments (options wo '-' or '--') as filenames or encode them to a file.  
 - options, like --password override keyfiles settings  
@@ -74,7 +76,7 @@ filegr trys to fill variables and temp files with zeros, and delete them, but pl
 fg will search .xbgk files in getConfigDir/.bitgrinder and getHomeDir/.bitgrinder if not found.
 
 
-for more examples see **test/filegrtests.sh**
+**for more examples see __test/filegrtests.sh__**
 
     Examples:
       |
