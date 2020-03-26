@@ -1706,15 +1706,28 @@ Notes:
           var
             bgkFile: File
             b64:string
+          
+          if verbosity > 0: echo "- looking for keyfile"
 
           try:
-            bgkFile = open(p.val,fmRead)
+                # pre check:..................
+            if not existsFile(p.val):
+              if verbosity > 0: echo "- searching for keyfile"
+              if existsFile(getConfigDir() & "bitgrinder" & os.DirSep & p.val):
+                 bgkFile = open(getConfigDir() & "bitgrinder" & os.DirSep & p.val)
+              elif existsFile(getHomeDir() & "bitgrinder" & os.DirSep & p.val):
+                 bgkFile = open(getHomeDir() & "bitgrinder" & os.DirSep & p.val)
+              else:
+                quit("ERROR: key file not found")
+            else:    
+              bgkFile = open(p.val,fmRead)
 
             b64 = $readAll(bgkFile)
             b64.stripLineEnd()
             theKey = base64.decode(b64).toByteSeq
+
             if theKey.len < 256: # ASSERTION
-              quit("KEY TOO SMALL ERROR " & $theKey.len)
+              quit("ERROR: KEY TOO SMALL : " & $theKey.len)
 
             if password.len == 0:
               password = b64[0..15]
@@ -1740,7 +1753,7 @@ Notes:
             b64.stripLineEnd()
             password = base64.decode(b64)
             if password.len < 4: # ASSERTION
-              quit("PASSWORD TOO SMALL ERROR " & $theKey.len)
+              quit("ERROR: PASSWORD TOO SMALL : " & $theKey.len)
 
 
           except:
@@ -1847,6 +1860,13 @@ Notes:
 #!_ __ ___ __ _ __ ___ __  _  __  ___  _______   _________ __ _
 
 
+  if password.len == 0 and theKey.len == 0 and optObj.xkeyFileName.len == 0 and
+    (operationMode == opEncode or operationMode == opDecode):
+      echo getConfigDir() & "bitgrinder" & os.DirSep & "bitgrinder.exbgk"
+      if existsFile(getConfigDir() & "bitgrinder" & os.DirSep & "bitgrinder.exbgk"):
+        optObj.xkeyFileName = getConfigDir() & "bitgrinder" & os.DirSep & "bitgrinder.exbgk"
+      elif existsFile(getConfigDir() & "bitgrinder" & os.DirSep & "bitgrinder.xbgk"):
+        optObj.xkeyFileName = getConfigDir() & "bitgrinder" & os.DirSep & "bitgrinder.xbgk"
   # post proces arguments................................
 
 #*          _  __                       _  __
@@ -1860,7 +1880,7 @@ Notes:
     ## .xbgk eXtendedKey: ini file containing
     ## options for en/decryption
     when debug >= 0b1: echo "using --xkey"
-    when debug >= 0b11: echo "getConfigDir ", getConfigDir() & ".bitgrinder" & os.DirSep
+    when debug >= 0b11: echo "getConfigDir ", getConfigDir() & "bitgrinder" & os.DirSep
     when debug >= 0b11: echo "getHomeDir ", getHomeDir()
 
 
@@ -1869,10 +1889,10 @@ Notes:
 
     # pre check:..................
     if not existsFile(optObj.xkeyFileName):
-      if existsFile(getConfigDir() & ".bitgrinder" & os.DirSep & optObj.xkeyFileName):
-        optObj.xkeyFileName = getConfigDir() & ".bitgrinder" & os.DirSep & optObj.xkeyFileName
-      elif existsFile(getHomeDir() & ".bitgrinder" & os.DirSep & optObj.xkeyFileName):
-        optObj.xkeyFileName = getHomeDir() & ".bitgrinder" & os.DirSep & optObj.xkeyFileName
+      if existsFile(getConfigDir() & "bitgrinder" & os.DirSep & optObj.xkeyFileName):
+        optObj.xkeyFileName = getConfigDir() & "bitgrinder" & os.DirSep & optObj.xkeyFileName
+      elif existsFile(getHomeDir() & "bitgrinder" & os.DirSep & optObj.xkeyFileName):
+        optObj.xkeyFileName = getHomeDir() & "bitgrinder" & os.DirSep & optObj.xkeyFileName
       else:
         quit(".xbgk .exbgk key file not found")
     #..........................
@@ -1968,6 +1988,10 @@ Notes:
           bitgrinder.KeyLen = theKey.len div bitgrinder.KeyTableRows
           if bitgrinder.KeyLen == 0:
             quit("ERROR: key length is zero !")
+        if verbosity > 0:
+            echo "- got the key"
+      else:
+        echo "- no valid key found"
     except:
       quit("ERROR: key cannot be read! " & getCurrentExceptionMsg())
 
